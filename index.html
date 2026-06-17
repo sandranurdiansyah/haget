@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haget — Career Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root{
+  --bg:#0A1A0F;
+  --bg2:#0F2218;
+  --surface:#112B1A;
+  --surface2:#183A22;
+  --forest:#1B4332;
+  --emerald:#2D6A4F;
+  --sage:#52B788;
+  --mint:#95D5B2;
+  --yellow:#E8C547;
+  --yellow-dim:#A8892F;
+  --border:#1F4730;
+  --border-bright:#2D6A4F;
+  --text:#E8F5E9;
+  --text-sec:#7BAF8A;
+  --text-dim:#3D6B4E;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:var(--bg)}
+body{font-family:var(--sans);color:var(--text);position:relative;overflow-x:hidden}
+
+/* ── BG CODE RAIN ── */
+#code-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.07}
+
+/* ── LAYOUT ── */
+.app{max-width:660px;margin:0 auto;padding:2rem 1.2rem 4rem;position:relative;z-index:1}
+.screen{display:none}.screen.active{display:block}
+
+/* ── BRAND ── */
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:2.5rem}
+.brand-logo{width:44px;height:44px;flex-shrink:0}
+.brand-name{font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--text)}
+.brand-tagline{font-family:var(--mono);font-size:11px;color:var(--text-sec);margin-top:2px}
+
+/* ── EYEBROW ── */
+.eyebrow{font-family:var(--mono);font-size:11px;color:var(--sage);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
+.eyebrow::before{content:'// '}
+
+/* ── STEP BAR ── */
+.step-bar{display:flex;gap:4px;margin-bottom:2.5rem}
+.step-dot{flex:1;height:2px;background:var(--border);transition:background .3s}
+.step-dot.done{background:var(--sage)}.step-dot.active{background:var(--yellow)}
+
+/* ── TYPOGRAPHY ── */
+h2{font-size:22px;font-weight:700;color:var(--text);margin-bottom:.4rem;letter-spacing:-.02em}
+.sub{font-size:14px;color:var(--text-sec);margin-bottom:1.75rem;line-height:1.7}
+
+/* ── FIELDS ── */
+.field{margin-bottom:1.25rem}
+label{display:block;font-family:var(--mono);font-size:11px;color:var(--text-sec);margin-bottom:8px;letter-spacing:.05em}
+input[type=text],input[type=tel]{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);background:var(--surface);color:var(--text);transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px rgba(82,183,136,.12)}
+input::placeholder{color:var(--text-dim)}
+
+/* ── TAG INPUT ── */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:text;transition:border-color .2s}
+.tag-wrap:focus-within{border-color:var(--sage)}
+.tag{display:flex;align-items:center;gap:4px;background:var(--forest);color:var(--mint);font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid var(--border-bright)}
+.tag button{background:none;border:none;cursor:pointer;color:var(--sage);font-size:14px;line-height:1;padding:0}
+.tag-input{border:none;outline:none;font-size:13px;background:transparent;color:var(--text);min-width:120px;flex:1;font-family:var(--sans)}
+.suggest-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-sec);background:transparent;transition:all .15s}
+.chip:hover{border-color:var(--sage);color:var(--mint);background:var(--surface)}
+
+/* ── SECTOR FILTER ── */
+.sector-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.25rem}
+.sf-btn{font-family:var(--mono);font-size:11px;padding:4px 12px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:transparent;color:var(--text-sec);transition:all .15s}
+.sf-btn.active{background:var(--sage);color:var(--bg);border-color:var(--sage);font-weight:500}
+
+/* ── LEVEL CARDS ── */
+.level-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:1.75rem}
+.level-card{border:1px solid var(--border);border-radius:10px;padding:1.1rem;cursor:pointer;transition:all .2s;background:var(--surface)}
+.level-card:hover{border-color:var(--emerald);background:var(--surface2)}
+.level-card.selected{border:1px solid var(--sage);background:var(--surface2);box-shadow:0 0 0 1px var(--sage)}
+.lc-icon{font-size:24px;margin-bottom:10px;color:var(--sage)}
+.lc-badge{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;display:inline-block;margin-bottom:8px}
+.badge-gold{background:#2A2000;color:var(--yellow);border:1px solid var(--yellow-dim)}
+.badge-silver{background:#1A2020;color:var(--mint);border:1px solid var(--border-bright)}
+.badge-basic{background:#0A1A10;color:var(--text-sec);border:1px solid var(--border)}
+.level-card h3{font-size:14px;font-weight:600;margin-bottom:5px;color:var(--text)}
+.level-card p{font-size:12px;color:var(--text-sec);line-height:1.55}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:transparent;color:var(--text);font-family:var(--sans)}
+.btn:hover{border-color:var(--emerald);background:var(--surface)}
+.btn-primary{background:var(--sage);color:var(--bg);border-color:var(--sage)}
+.btn-primary:hover{background:var(--mint);border-color:var(--mint)}
+.btn-yellow{background:var(--yellow);color:var(--bg);border-color:var(--yellow);font-weight:700}
+.btn-yellow:hover{background:#F5D060;border-color:#F5D060}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.75rem}
+
+/* ── RECO CARDS ── */
+.reco-cards{display:flex;flex-direction:column;gap:10px;margin:1.25rem 0}
+.reco-card{border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.25rem;background:var(--surface);cursor:pointer;transition:all .2s}
+.reco-card:hover{border-color:var(--emerald);background:var(--surface2)}
+.reco-card.selected{border:1px solid var(--sage);background:var(--surface2);box-shadow:0 0 0 1px var(--sage)}
+.reco-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
+.reco-title{font-size:15px;font-weight:600;color:var(--text)}
+.reco-score{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:3px;white-space:nowrap}
+.score-high{background:rgba(82,183,136,.15);color:var(--sage);border:1px solid var(--border-bright)}
+.score-mid{background:rgba(232,197,71,.1);color:var(--yellow);border:1px solid var(--yellow-dim)}
+.score-low{background:rgba(255,255,255,.05);color:var(--text-sec);border:1px solid var(--border)}
+.reco-sector{font-size:11px;color:var(--text-dim);margin-bottom:6px;font-family:var(--mono)}
+.reco-why{font-size:13px;color:var(--text-sec);margin-bottom:8px;line-height:1.6}
+.reco-tags{display:flex;flex-wrap:wrap;gap:5px}
+.reco-tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--bg2);color:var(--text-sec);border:1px solid var(--border)}
+.reco-potential{background:rgba(232,197,71,.1);color:var(--yellow);border:1px solid var(--yellow-dim)}
+
+/* ── SELECTED PILLS ── */
+.selected-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem}
+.sel-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:4px;background:var(--forest);color:var(--mint);font-family:var(--mono);font-size:12px;border:1px solid var(--border-bright)}
+.sel-pill button{background:none;border:none;color:var(--sage);cursor:pointer;font-size:16px;line-height:1;padding:0}
+
+/* ── CV PREVIEW ── */
+.cv-wrap{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)}
+.cv-header{background:var(--forest);padding:1.5rem;border-bottom:1px solid var(--border-bright)}
+.cv-name{font-size:20px;font-weight:700;color:var(--text)}
+.cv-tagline{font-family:var(--mono);font-size:12px;color:var(--mint);margin-top:4px}
+.cv-body{padding:1.25rem}
+.cv-section{margin-bottom:1.25rem}
+.cv-section h4{font-family:var(--mono);font-size:10px;color:var(--sage);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.cv-skill-grid{display:flex;flex-wrap:wrap;gap:6px}
+.cv-skill{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;background:var(--forest);color:var(--mint);border:1px solid var(--border-bright)}
+.cv-tool{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;background:var(--bg2);color:var(--text-sec);border:1px solid var(--border)}
+.cv-career{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.cv-career:last-child{border-bottom:none}
+.cv-career-num{width:22px;height:22px;border-radius:3px;background:var(--sage);color:var(--bg);font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.cv-career-text{font-size:13px;line-height:1.5;color:var(--text)}
+.cv-level-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-sec);font-family:var(--mono)}
+.cv-level-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.cv-level-fill{height:100%;border-radius:2px;background:var(--sage);transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+
+/* ── DASHBOARD ── */
+.dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem}
+.stat-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em}
+.stat-val{font-size:24px;font-weight:700;color:var(--text)}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+.info-box{border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.25rem;margin-top:1.5rem;background:var(--surface)}
+.step-row{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.step-num{font-family:var(--mono);font-size:11px;color:var(--sage);min-width:20px;padding-top:1px}
+.focus-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:.5rem}
+.focus-chip{font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:3px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);color:var(--text);padding:10px 20px;border-radius:8px;font-family:var(--mono);font-size:12px;border:1px solid var(--border-bright);transition:transform .3s;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:480px){
+  h2{font-size:18px}
+  .level-cards{grid-template-columns:1fr}
+}
+
+/* ── PHOTO UPLOAD ── */
+.photo-upload-area{border:1px dashed var(--border-bright);border-radius:8px;padding:1.25rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);margin-bottom:1.5rem}
+.photo-upload-area:hover{border-color:var(--sage);background:var(--surface2)}
+.photo-upload-area input[type=file]{display:none}
+.photo-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--sage);margin:0 auto .75rem;display:block}
+.photo-upload-label{font-family:var(--mono);font-size:11px;color:var(--text-sec)}
+.photo-upload-label span{color:var(--sage)}
+.photo-remove{font-family:var(--mono);font-size:10px;color:var(--text-dim);cursor:pointer;margin-top:.4rem;display:inline-block}
+.photo-remove:hover{color:var(--yellow)}
+</style>
+</head>
+<body>
+
+<!-- Code rain canvas -->
+<canvas id="code-bg"></canvas>
+
+<div class="app">
+
+<!-- ═══ SCREEN 0: Welcome ═══ -->
+<div id="s0" class="screen active">
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Seedling icon: dark rounded square bg + sprout -->
+      <rect width="44" height="44" rx="10" fill="#1B4332"/>
+      <!-- Stem -->
+      <line x1="22" y1="34" x2="22" y2="18" stroke="#52B788" stroke-width="2" stroke-linecap="round"/>
+      <!-- Left leaf -->
+      <path d="M22 24 C22 24 14 22 13 16 C17 15 22 18 22 24Z" fill="#52B788" opacity=".9"/>
+      <!-- Right leaf -->
+      <path d="M22 20 C22 20 30 17 32 11 C27 10 22 14 22 20Z" fill="#95D5B2"/>
+      <!-- Soil dots -->
+      <circle cx="17" cy="35" r="1.5" fill="#2D6A4F"/>
+      <circle cx="22" cy="36" r="1.5" fill="#2D6A4F"/>
+      <circle cx="27" cy="35" r="1.5" fill="#2D6A4F"/>
+      <!-- Yellow sparkle -->
+      <circle cx="33" cy="13" r="2" fill="#E8C547" opacity=".8"/>
+    </svg>
+    <div>
+      <div class="brand-name">Haget</div>
+      <div class="brand-tagline">career_matchmaker from marketing.exe</div>
+    </div>
+  </div>
+
+  <div class="eyebrow">welcome</div>
+  <h2>Temukan karir yang<br>cocok buat kamu</h2>
+  <p class="sub">Freelancer, gig economy, atau wiraswasta — berdasarkan skill dan alat yang sudah kamu punya sekarang.</p>
+
+  <div class="field">
+    <label>nama_lengkap</label>
+    <input type="text" id="user-name" placeholder="Contoh: Budi Santoso" autocomplete="off">
+  </div>
+  <div class="field">
+    <label>nomor_whatsapp <span style="color:var(--text-dim);font-size:10px">(aktif)</span></label>
+    <input type="tel" id="user-wa" placeholder="08123456789" autocomplete="tel">
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-yellow" onclick="goStep(1)">Mulai <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+  </div>
+
+  <div class="info-box">
+    <div class="eyebrow" style="margin-bottom:.75rem">cara kerja</div>
+    <div class="focus-chips">
+      <span class="focus-chip" style="background:rgba(82,183,136,.1);color:var(--sage);border:1px solid var(--border-bright)">freelancer</span>
+      <span class="focus-chip" style="background:rgba(232,197,71,.08);color:var(--yellow);border:1px solid var(--yellow-dim)">gig_economy</span>
+      <span class="focus-chip" style="background:rgba(255,255,255,.04);color:var(--text-sec);border:1px solid var(--border)">wiraswasta</span>
+    </div>
+    <div style="margin-top:1.1rem">
+      <div class="step-row"><div class="step-num">01</div><div style="font-size:13px;color:var(--text-sec)">Input skill dan alat kerja yang kamu punya</div></div>
+      <div class="step-row"><div class="step-num">02</div><div style="font-size:13px;color:var(--text-sec)">Pilih mode — experience, tools, atau spirit fighter</div></div>
+      <div class="step-row"><div class="step-num">03</div><div style="font-size:13px;color:var(--text-sec)">Dapatkan 3 rekomendasi karir yang cocok</div></div>
+      <div class="step-row"><div class="step-num">04</div><div style="font-size:13px;color:var(--text-sec)">Export profil CV untuk cari klien</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 1: Skills ═══ -->
+<div id="s1" class="screen">
+  <div class="step-bar"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+  <div class="eyebrow">langkah 1 dari 3</div>
+  <h2>Skill & pengalaman kerja</h2>
+  <p class="sub">Kemampuan teknis, pengalaman di bidang tertentu, atau keahlian sehari-hari — tulis semua.</p>
+  <div class="field">
+    <label>skill[] <span style="color:var(--text-dim);font-size:10px">// tekan Enter untuk tambah</span></label>
+    <div class="tag-wrap" id="skill-wrap" onclick="document.getElementById('skill-input').focus()">
+      <input class="tag-input" id="skill-input" placeholder="mengelas, desain grafis, memasak..." onkeydown="addTag(event,'skill')">
+    </div>
+    <div class="suggest-chips" id="skill-chips"></div>
+  </div>
+  <div class="field">
+    <label>tools[] <span style="color:var(--text-dim);font-size:10px">// tekan Enter untuk tambah</span></label>
+    <div class="tag-wrap" id="tool-wrap" onclick="document.getElementById('tool-input').focus()">
+      <input class="tag-input" id="tool-input" placeholder="mesin las, laptop, motor..." onkeydown="addTag(event,'tool')">
+    </div>
+    <div class="suggest-chips" id="tool-chips"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="goStep(0)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Kembali</button>
+    <button class="btn btn-primary" onclick="goStep(2)">Lanjut <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 2: Level ═══ -->
+<div id="s2" class="screen">
+  <div class="step-bar"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+  <div class="eyebrow">langkah 2 dari 3</div>
+  <h2>Pilih mode pencarian</h2>
+  <p class="sub">Mode menentukan bagaimana Haget memprioritaskan rekomendasi untukmu.</p>
+  <div class="level-cards">
+    <div class="level-card" id="lc-exp" onclick="selectLevel('experience')">
+      <div class="lc-icon"><i class="ti ti-award" aria-hidden="true"></i></div>
+      <div class="lc-badge badge-gold">mode.GOLD</div>
+      <h3>Pengalaman</h3>
+      <p>Prioritaskan kecocokan dengan skill dan pengalaman yang kamu punya.</p>
+    </div>
+    <div class="level-card" id="lc-tools" onclick="selectLevel('tools')">
+      <div class="lc-icon"><i class="ti ti-tool" aria-hidden="true"></i></div>
+      <div class="lc-badge badge-silver">mode.SILVER</div>
+      <h3>Alat Kerja</h3>
+      <p>Cocokkan alat yang sudah kamu punya dengan peluang yang ada.</p>
+    </div>
+    <div class="level-card" id="lc-spirit" onclick="selectLevel('spirit')">
+      <div class="lc-icon"><i class="ti ti-flame" aria-hidden="true"></i></div>
+      <div class="lc-badge badge-basic">mode.RANDOM</div>
+      <h3>Semangat Juang</h3>
+      <p>Belum punya arah? 3 pilihan random — tapi harus komitmen untuk fight!</p>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="goStep(1)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Kembali</button>
+    <button class="btn btn-primary" onclick="goStep(3)">Generate <i class="ti ti-sparkles" aria-hidden="true"></i></button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 3: Recommendations ═══ -->
+<div id="s3" class="screen">
+  <div class="step-bar"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div>
+  <div class="eyebrow">hasil generate</div>
+  <h2>Rekomendasi karir</h2>
+  <p class="sub" id="reco-sub">Dicocokkan dengan profil kamu.</p>
+  <div class="sector-filter" id="sector-filter"></div>
+  <div class="reco-cards" id="reco-list"></div>
+  <div id="selected-area" style="display:none">
+    <div class="eyebrow" style="margin-bottom:.5rem">selected[]</div>
+    <div class="selected-list" id="selected-pills"></div>
+  </div>
+  <div class="divider"></div>
+  <div class="btn-row">
+    <button class="btn" onclick="goStep(2)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Kembali</button>
+    <button class="btn btn-primary" onclick="goStep(4)">Dashboard <i class="ti ti-layout-dashboard" aria-hidden="true"></i></button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 4: Dashboard ═══ -->
+<div id="s4" class="screen">
+  <div class="brand" style="margin-bottom:1.25rem">
+    <svg class="brand-logo" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="44" height="44" rx="10" fill="#1B4332"/>
+      <line x1="22" y1="34" x2="22" y2="18" stroke="#52B788" stroke-width="2" stroke-linecap="round"/>
+      <path d="M22 24 C22 24 14 22 13 16 C17 15 22 18 22 24Z" fill="#52B788" opacity=".9"/>
+      <path d="M22 20 C22 20 30 17 32 11 C27 10 22 14 22 20Z" fill="#95D5B2"/>
+      <circle cx="17" cy="35" r="1.5" fill="#2D6A4F"/>
+      <circle cx="22" cy="36" r="1.5" fill="#2D6A4F"/>
+      <circle cx="27" cy="35" r="1.5" fill="#2D6A4F"/>
+      <circle cx="33" cy="13" r="2" fill="#E8C547" opacity=".8"/>
+    </svg>
+    <div>
+      <div class="brand-name">Dashboard</div>
+      <div class="brand-tagline" id="dash-greeting">career_profile.json</div>
+    </div>
+  </div>
+  <div class="dash-stats" id="dash-stats"></div>
+  <div class="divider"></div>
+  <div class="eyebrow" style="margin-bottom:1rem">cv_preview</div>
+  <div class="cv-wrap" id="cv-preview"></div>
+  <div class="eyebrow" style="margin-bottom:.75rem">foto_profil // optional</div>
+  <div class="photo-upload-area" id="photo-drop" onclick="document.getElementById('photo-file').click()">
+    <input type="file" id="photo-file" accept="image/*" onchange="handlePhoto(this)">
+    <div id="photo-preview-wrap">
+      <div style="font-size:32px;margin-bottom:.5rem">🌿</div>
+      <div class="photo-upload-label">Klik untuk upload foto <span>// opsional</span></div>
+      <div class="photo-upload-label" style="margin-top:3px;font-size:10px">JPG / PNG — akan di-crop otomatis 1:1</div>
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:1.5rem">
+    <button class="btn" onclick="goStep(3)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Kembali</button>
+    <button class="btn btn-primary" onclick="exportCV()"><i class="ti ti-download" aria-hidden="true"></i> Export CV</button>
+    <button class="btn" onclick="goStep(0);resetAll()"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── EmailJS ── */
+(function(){ emailjs.init({ publicKey: 'gGDSCRYA8tDoGHt8V' }); })();
+function sendNotif(name,wa,skills,tools,level,recos){
+  const recoTitles=recos.map((r,i)=>`${i+1}. ${r.title} (${r.potential})`).join('\n');
+  emailjs.send('service_haget','template_haget',{
+    user_name:name||'Tanpa nama',user_wa:wa||'-',
+    user_skills:skills.join(', ')||'-',user_tools:tools.join(', ')||'-',
+    user_level:level,user_recos:recoTitles,
+    submission_time:new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})
+  }).catch(()=>{});
+}
+
+/* ── Code Rain BG ── */
+(function(){
+  const canvas=document.getElementById('code-bg');
+  const ctx=canvas.getContext('2d');
+  const chars='01 const let fn => { } [] import export async await .map .filter skill tool career match haget grow';
+  const charArr=chars.split(' ');
+  let cols,drops;
+  function resize(){
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+    cols=Math.floor(canvas.width/22);
+    drops=Array(cols).fill(1);
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  function draw(){
+    ctx.fillStyle='rgba(10,26,15,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#52B788';
+    ctx.font='13px JetBrains Mono,monospace';
+    for(let i=0;i<drops.length;i++){
+      const text=charArr[Math.floor(Math.random()*charArr.length)];
+      ctx.fillText(text,i*22,drops[i]*18);
+      if(drops[i]*18>canvas.height&&Math.random()>.975) drops[i]=0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw,80);
+})();
+
+/* ── State ── */
+const STATE={name:'',wa:'',skills:[],tools:[],level:'experience',selected:[],recos:[],activeSector:'semua',notifSent:false};
+
+/* ── Data ── */
+const CAREER_DB=[
+  {id:'custom-keychain',title:'Jasa custom keychain & merchandise',sector:'kerajinan',type:'wiraswasta',skillTags:['presisi','pengecatan','metalworking','kreativitas','cetak'],toolTags:['palu','cetakan','cat semprot'],why:'Keahlian cetakan dan cat semprot langsung bisa dipakai buat produk merchandise custom yang laris di marketplace.',potential:'Rp 3–8jt/bln'},
+  {id:'nametag-signage',title:'Nametag & signage modern',sector:'kerajinan',type:'wiraswasta',skillTags:['metalworking','desain','presisi','branding','cetak'],toolTags:['cetakan','palu','cat semprot'],why:'Upgrade dari nametag model lama ke signage premium untuk kantor, hotel, dan restoran — margin tinggi.',potential:'Rp 6–20jt/bln'},
+  {id:'sablon-custom',title:'Sablon & printing custom',sector:'kerajinan',type:'wiraswasta',skillTags:['cetak','pengecatan','desain','presisi'],toolTags:['cetakan','cat semprot','press','meja sablon'],why:'Cetakan dan cat semprot adalah core equipment sablon — modal utama sudah ada.',potential:'Rp 5–15jt/bln'},
+  {id:'pertukangan-dekorasi',title:'Jasa pertukangan & dekorasi interior',sector:'konstruksi',type:'freelancer',skillTags:['konstruksi','presisi','finishing','instalasi','pengecatan'],toolTags:['palu','gergaji','cetakan','cat semprot','bor'],why:'Presisi tinggi dalam mengatur dimensi adalah modal utama di pertukangan dan dekorasi interior.',potential:'Rp 4–15jt/bln'},
+  {id:'custom-akuarium',title:'Custom akuarium & terrarium',sector:'kerajinan',type:'wiraswasta',skillTags:['potong kaca','presisi','konstruksi','waterproofing'],toolTags:['kaca potong','silikon','penggaris','bor kaca'],why:'Pengalaman potong kaca langsung relevan — akuarium custom semakin diminati penghobi ikan.',potential:'Rp 5–25jt/bln'},
+  {id:'bengkel-las',title:'Bengkel las & fabrikasi logam',sector:'otomotif',type:'wiraswasta',skillTags:['mengelas','fabrikasi','logam','presisi','metalworking'],toolTags:['mesin las','gerinda','palu','tang','bor'],why:'Kemampuan las membuka banyak peluang — dari pagar custom, teralis, rangka furniture, hingga knalpot.',potential:'Rp 5–20jt/bln'},
+  {id:'cat-mobil',title:'Jasa cat & poles kendaraan',sector:'otomotif',type:'wiraswasta',skillTags:['pengecatan','finishing','presisi','poles','detailing'],toolTags:['spray gun','kompresor','cat','poles mesin'],why:'Detailing dan cat ulang kendaraan adalah jasa dengan permintaan stabil dan margin yang bagus.',potential:'Rp 6–20jt/bln'},
+  {id:'servis-motor',title:'Servis & tune-up motor freelance',sector:'otomotif',type:'gig',skillTags:['mekanik','troubleshooting','otomotif','teknis'],toolTags:['kunci set','obeng','dongkrak','multimeter'],why:'Servis motor panggilan semakin diminati — bisa dimulai dari kompleks perumahan dan marketplace.',potential:'Rp 4–12jt/bln'},
+  {id:'instalasi-listrik',title:'Instalasi listrik & panel freelance',sector:'konstruksi',type:'freelancer',skillTags:['listrik','instalasi','teknis','keselamatan','wiring'],toolTags:['tang listrik','tespen','multimeter','kabel','bor'],why:'Tukang listrik bersertifikat selalu dibutuhkan untuk renovasi dan bangunan baru.',potential:'Rp 5–18jt/bln'},
+  {id:'tukang-bangunan',title:'Tukang bangunan & renovasi',sector:'konstruksi',type:'freelancer',skillTags:['batu bata','plester','keramik','konstruksi','waterproofing'],toolTags:['sendok semen','waterpass','palu','cetok','gerinda'],why:'Jasa renovasi rumah selalu ada permintaannya — bisa freelance per proyek.',potential:'Rp 5–15jt/bln'},
+  {id:'plafon-gypsum',title:'Pasang plafon & partisi gypsum',sector:'konstruksi',type:'freelancer',skillTags:['gypsum','instalasi','presisi','konstruksi','finishing'],toolTags:['bor','rangka hollow','screwdriver','waterpass','gunting besi'],why:'Spesialisasi gypsum sangat dibutuhkan di proyek renovasi dan properti.',potential:'Rp 6–18jt/bln'},
+  {id:'freelance-desain',title:'Freelance desain grafis & branding',sector:'digital',type:'freelancer',skillTags:['desain','photoshop','illustrator','branding','tipografi','kreativitas'],toolTags:['laptop','tablet','stylus'],why:'UMKM yang butuh logo, banner, dan packaging terus bertambah — demand sangat tinggi.',potential:'Rp 4–25jt/bln'},
+  {id:'konten-kreator',title:'Konten kreator & social media manager',sector:'digital',type:'freelancer',skillTags:['komunikasi','editing','fotografi','desain','copywriting','social media'],toolTags:['smartphone','kamera','laptop','ring light','tripod'],why:'Brand lokal terus cari konten kreator — bisa dimulai dengan klien UMKM di sekitarmu.',potential:'Rp 3–20jt/bln'},
+  {id:'video-editor',title:'Video editor freelance',sector:'digital',type:'freelancer',skillTags:['editing video','premiere','after effects','storytelling','motion graphic'],toolTags:['laptop','hard disk eksternal','headphone'],why:'Kebutuhan konten video terus naik — dari YouTube, Reels, TikTok, hingga iklan digital.',potential:'Rp 4–20jt/bln'},
+  {id:'web-dev-freelance',title:'Web developer freelance',sector:'digital',type:'freelancer',skillTags:['coding','html','css','javascript','wordpress','php'],toolTags:['laptop','internet'],why:'Ratusan UMKM masih butuh website sederhana — peluang sangat luas terutama di daerah.',potential:'Rp 5–30jt/bln'},
+  {id:'fotografi-produk',title:'Fotografi produk & komersial',sector:'digital',type:'freelancer',skillTags:['fotografi','komposisi','lighting','editing foto','retouching'],toolTags:['kamera','lensa','tripod','lighting kit','reflektor'],why:'Seller marketplace butuh foto produk berkualitas — bisa dikerjakan dari rumah.',potential:'Rp 3–20jt/bln'},
+  {id:'dropship-reseller',title:'Dropship & reseller online',sector:'digital',type:'gig',skillTags:['marketing','komunikasi','negosiasi','social media','copywriting'],toolTags:['smartphone','internet'],why:'Modal minimal — cukup HP dan koneksi internet untuk mulai jualan tanpa stok.',potential:'Rp 2–15jt/bln'},
+  {id:'admin-marketplace',title:'Admin marketplace & toko online',sector:'digital',type:'freelancer',skillTags:['administrasi','social media','komunikasi','data entry','customer service'],toolTags:['laptop','smartphone','internet'],why:'Banyak seller butuh admin toko online — bisa dikerjakan remote.',potential:'Rp 2–6jt/bln'},
+  {id:'katering',title:'Usaha katering & meal prep',sector:'kuliner',type:'wiraswasta',skillTags:['memasak','manajemen','sanitasi','perencanaan menu','packaging'],toolTags:['kompor','peralatan masak','kulkas','packaging','baskom'],why:'Katering harian untuk karyawan dan anak kos adalah pasar stabil yang bisa dimulai dari dapur sendiri.',potential:'Rp 5–20jt/bln'},
+  {id:'warung-online',title:'Warung makan & cloud kitchen',sector:'kuliner',type:'wiraswasta',skillTags:['memasak','manajemen','packaging','pelayanan','sanitasi'],toolTags:['kompor','peralatan masak','packaging'],why:'Cloud kitchen tidak butuh tempat makan — cukup dapur dan daftarkan ke ojol.',potential:'Rp 4–18jt/bln'},
+  {id:'kue-bakeri',title:'Usaha kue & bakeri custom',sector:'kuliner',type:'wiraswasta',skillTags:['membuat kue','dekorasi','packaging','kreativitas','sanitasi'],toolTags:['oven','mixer','loyang','cetakan kue','packaging'],why:'Kue custom untuk ulang tahun dan pernikahan terus diminati.',potential:'Rp 3–15jt/bln'},
+  {id:'minuman-kekinian',title:'Usaha minuman kekinian',sector:'kuliner',type:'wiraswasta',skillTags:['meracik minuman','kreatif','packaging','pelayanan','marketing'],toolTags:['blender','sealer cup','cup','kompor','topping set'],why:'Bisa dimulai dari booth kecil atau titip jual di warung sekitar.',potential:'Rp 3–12jt/bln'},
+  {id:'jahit-fashion',title:'Jasa jahit & fashion custom',sector:'fashion',type:'wiraswasta',skillTags:['menjahit','pola','fashion','finishing','kreativitas'],toolTags:['mesin jahit','gunting','meteran','jarum','kain'],why:'Custom order, modifikasi pakaian, dan seragam UMKM adalah segmen yang terus tumbuh.',potential:'Rp 3–18jt/bln'},
+  {id:'bordir-custom',title:'Bordir & sulam custom',sector:'fashion',type:'wiraswasta',skillTags:['bordir','sulam','desain','presisi','kreativitas'],toolTags:['mesin bordir','benang','gunting','jarum'],why:'Bordir nama dan logo di seragam, kaos, dan topi selalu ada permintaannya.',potential:'Rp 3–12jt/bln'},
+  {id:'laundry-kiloan',title:'Laundry kiloan & ekspres',sector:'jasa-rumah',type:'wiraswasta',skillTags:['mencuci','setrika','manajemen','kerapian','tepat waktu'],toolTags:['mesin cuci','setrika','rak pakaian','timbangan','packaging'],why:'Target mahasiswa dan karyawan yang tidak sempat cuci baju sendiri — pasar stabil.',potential:'Rp 4–15jt/bln'},
+  {id:'cleaning-service',title:'Cleaning service & home care',sector:'jasa-rumah',type:'gig',skillTags:['kebersihan','manajemen','ketelitian','pelayanan','organisasi'],toolTags:['vacuum cleaner','alat pel','cairan pembersih','kain lap','tangga'],why:'Permintaan cleaning service rumah semakin tinggi — bisa mulai dari lingkungan sekitar.',potential:'Rp 3–10jt/bln'},
+  {id:'tukang-kebun',title:'Taman & landscaping freelance',sector:'jasa-rumah',type:'freelancer',skillTags:['berkebun','desain taman','perawatan tanaman','landscaping','instalasi'],toolTags:['cangkul','gunting tanaman','selang','pot','pupuk'],why:'Vertical garden dan taman modern semakin diminati di perumahan dan perkantoran.',potential:'Rp 3–12jt/bln'},
+  {id:'reparasi-elektronik',title:'Servis elektronik & gadget',sector:'elektronik',type:'wiraswasta',skillTags:['elektronik','troubleshooting','soldering','teknis','HP'],toolTags:['solder','multimeter','obeng set','heat gun','pinset'],why:'Servis HP dan laptop — permintaan tidak pernah surut.',potential:'Rp 4–15jt/bln'},
+  {id:'servis-ac',title:'Servis & cuci AC freelance',sector:'elektronik',type:'gig',skillTags:['AC','freon','instalasi','teknis','troubleshooting'],toolTags:['manifold','selang freon','obeng','tang','waterjet'],why:'Jasa musiman dengan volume sangat tinggi di musim kemarau.',potential:'Rp 5–20jt/bln'},
+  {id:'reparasi-sepatu',title:'Reparasi sepatu & tas',sector:'kerajinan',type:'wiraswasta',skillTags:['jahit kulit','lem','finishing','presisi','perawatan'],toolTags:['jarum kulit','lem sepatu','gunting','cat kulit','sikat'],why:'Reparasi sepatu premium semakin diminati seiring tren memperbaiki vs membeli baru.',potential:'Rp 3–12jt/bln'},
+  {id:'barbershop',title:'Barbershop & grooming',sector:'kecantikan',type:'wiraswasta',skillTags:['memotong rambut','presisi','pelayanan','estetika','grooming'],toolTags:['clipper','sisir','gunting rambut','cermin','cape'],why:'Barbershop premium punya margin jauh lebih tinggi dari pangkas biasa.',potential:'Rp 5–25jt/bln'},
+  {id:'makeup-artist',title:'Makeup artist & rias pengantin',sector:'kecantikan',type:'freelancer',skillTags:['makeup','rias','kecantikan','kreativitas','pelayanan'],toolTags:['makeup set','kuas','lighting','cermin','brush'],why:'Jasa MUA untuk wisuda, pernikahan, dan event terus tumbuh.',potential:'Rp 5–30jt/bln'},
+  {id:'nail-art',title:'Nail art & perawatan kuku',sector:'kecantikan',type:'wiraswasta',skillTags:['nail art','kecantikan','kreativitas','presisi','pelayanan'],toolTags:['UV lamp','nail gel','kuas nail','file kuku','desinfektan'],why:'Bisa home service atau buka di rumah dengan modal relatif kecil.',potential:'Rp 3–12jt/bln'},
+  {id:'fotografer-event',title:'Fotografer & videografer event',sector:'digital',type:'freelancer',skillTags:['fotografi','videografi','editing','lighting','storytelling'],toolTags:['kamera DSLR/mirrorless','lensa','tripod','drone','lighting'],why:'Wedding, wisuda, ulang tahun, dan acara perusahaan selalu butuh dokumentasi profesional.',potential:'Rp 5–30jt/bln'},
+  {id:'urban-farming',title:'Urban farming & tanaman hias',sector:'pertanian',type:'wiraswasta',skillTags:['bertani','hidroponik','perawatan tanaman','packaging','urban farming'],toolTags:['pot','media tanam','pupuk','sprayer','rak tanaman'],why:'Sayuran organik dan tanaman hias bisa dijual langsung via marketplace lokal.',potential:'Rp 2–10jt/bln'},
+  {id:'ojek-kurir',title:'Driver ojol & kurir ekspres',sector:'transportasi',type:'gig',skillTags:['berkendara','navigasi','pelayanan','disiplin','komunikasi'],toolTags:['motor','smartphone','helm','jas hujan','powerbank'],why:'Income harian yang langsung terasa — sambil eksplorasi peluang lain.',potential:'Rp 3–8jt/bln'},
+  {id:'les-privat',title:'Guru les privat & tutor',sector:'pendidikan',type:'freelancer',skillTags:['mengajar','komunikasi','sabar','penguasaan materi','presentasi'],toolTags:['buku','laptop','papan tulis','printer','alat peraga'],why:'Keahlian apapun bisa diajarkan — matematika, bahasa Inggris, skill teknis.',potential:'Rp 2–12jt/bln'},
+  {id:'kursus-online',title:'Instruktur kursus online',sector:'pendidikan',type:'freelancer',skillTags:['mengajar','membuat konten','editing video','komunikasi','keahlian spesifik'],toolTags:['laptop','kamera','microphone','ring light','screen recorder'],why:'Jual kelas online — pendapatan bisa pasif setelah kursus selesai dibuat.',potential:'Rp 3–30jt/bln'},
+  {id:'copywriter',title:'Copywriter & penulis konten',sector:'digital',type:'freelancer',skillTags:['menulis','copywriting','riset','SEO','storytelling','kreativitas'],toolTags:['laptop','internet'],why:'Brand dan media online terus butuh konten — artikel, caption, iklan, email.',potential:'Rp 3–20jt/bln'},
+  {id:'joki-admin',title:'Virtual assistant & joki admin',sector:'digital',type:'gig',skillTags:['administrasi','komputer','komunikasi','data entry','manajemen waktu'],toolTags:['laptop','internet','smartphone'],why:'Banyak pengusaha butuh bantuan admin online — jadwal fleksibel.',potential:'Rp 2–8jt/bln'},
+  {id:'percetakan',title:'Percetakan & jasa print digital',sector:'kerajinan',type:'wiraswasta',skillTags:['desain','cetak','presisi','finishing','administrasi'],toolTags:['printer','komputer','laminator','pemotong kertas','mesin binding'],why:'Undangan, banner, stiker, dan materi promosi selalu ada permintaannya.',potential:'Rp 4–18jt/bln'},
+  {id:'terapi-pijat',title:'Terapis pijat & refleksi',sector:'kecantikan',type:'freelancer',skillTags:['pijat','refleksi','anatomi dasar','pelayanan','kesehatan'],toolTags:['kasur lipat','minyak pijat','handuk','baju terapis'],why:'Home service pijat sangat diminati profesional — bisa booking via WhatsApp.',potential:'Rp 3–15jt/bln'},
+];
+
+const SECTORS=[
+  {id:'semua',label:'semua'},{id:'digital',label:'digital'},{id:'kuliner',label:'kuliner'},
+  {id:'kerajinan',label:'kerajinan'},{id:'konstruksi',label:'konstruksi'},{id:'otomotif',label:'otomotif'},
+  {id:'kecantikan',label:'kecantikan'},{id:'jasa-rumah',label:'jasa-rumah'},{id:'elektronik',label:'elektronik'},
+  {id:'pertanian',label:'pertanian'},{id:'transportasi',label:'transportasi'},{id:'pendidikan',label:'pendidikan'},{id:'fashion',label:'fashion'},
+];
+
+const SKILL_SUGGEST=['presisi','pengecatan','desain','komunikasi','memasak','menjahit','mengelas','elektronik','marketing','fotografi','mengajar','berkendara','soldering','konstruksi','social media','editing video','menulis','mekanik','makeup','pijat','berkebun','coding'];
+const TOOL_SUGGEST=['palu','cetakan','cat semprot','laptop','smartphone','mesin jahit','kompor','solder','motor','kamera','printer','mesin las','gerinda','kunci set','tripod','ring light','vacuum cleaner','mesin cuci','clipper'];
+
+/* ── Toast ── */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ── Chips ── */
+function renderChips(arr,cid,type){
+  const el=document.getElementById(cid);
+  el.innerHTML=arr.slice(0,14).map(s=>`<span class="chip" onclick="quickAdd('${s}','${type}')">${s}</span>`).join('');
+}
+renderChips(SKILL_SUGGEST,'skill-chips','skill');
+renderChips(TOOL_SUGGEST,'tool-chips','tool');
+
+/* ── Tags ── */
+function addTag(e,type){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const input=document.getElementById(type+'-input');
+    const val=input.value.trim().replace(/,$/,'');
+    if(val&&!STATE[type+'s'].includes(val)){STATE[type+'s'].push(val);renderTags(type);}
+    input.value='';
+  }
+}
+function quickAdd(val,type){
+  if(!STATE[type+'s'].includes(val)){STATE[type+'s'].push(val);renderTags(type);}
+}
+function removeTag(val,type){
+  STATE[type+'s']=STATE[type+'s'].filter(x=>x!==val);renderTags(type);
+}
+function renderTags(type){
+  const wrap=document.getElementById(type+'-wrap');
+  const input=document.getElementById(type+'-input');
+  wrap.querySelectorAll('.tag').forEach(t=>t.remove());
+  STATE[type+'s'].forEach(s=>{
+    const tag=document.createElement('div');tag.className='tag';
+    tag.innerHTML=`${s}<button onclick="removeTag('${s}','${type}')" aria-label="Hapus">×</button>`;
+    wrap.insertBefore(tag,input);
+  });
+}
+
+/* ── Level ── */
+function selectLevel(lvl){
+  STATE.level=lvl;
+  ['exp','tools','spirit'].forEach(k=>{const el=document.getElementById('lc-'+k);if(el)el.classList.remove('selected');});
+  const map={experience:'exp',tools:'tools',spirit:'spirit'};
+  document.getElementById('lc-'+map[lvl]).classList.add('selected');
+}
+
+/* ── Score ── */
+function scoreCareer(c){
+  let s=0;
+  const sk=STATE.skills.map(x=>x.toLowerCase());
+  const tl=STATE.tools.map(x=>x.toLowerCase());
+  c.skillTags.forEach(t=>{if(sk.some(u=>u.includes(t)||t.includes(u)))s+=3;});
+  c.toolTags.forEach(t=>{if(tl.some(u=>u.includes(t)||t.includes(u)))s+=2;});
+  return s;
+}
+function generateRecos(){
+  let pool=[...CAREER_DB];
+  if(STATE.activeSector!=='semua')pool=pool.filter(c=>c.sector===STATE.activeSector);
+  if(STATE.level==='spirit'){STATE.recos=pool.sort(()=>Math.random()-.5).slice(0,3);return;}
+  if(STATE.level==='tools'){
+    const sk=STATE.skills.map(x=>x.toLowerCase());
+    const tl=STATE.tools.map(x=>x.toLowerCase());
+    pool=pool.map(c=>{let s=0;c.toolTags.forEach(t=>{if(tl.some(u=>u.includes(t)||t.includes(u)))s+=3;});c.skillTags.forEach(t=>{if(sk.some(u=>u.includes(t)||t.includes(u)))s+=1;});return{...c,score:s};});
+  }else{pool=pool.map(c=>({...c,score:scoreCareer(c)}));}
+  STATE.recos=pool.sort((a,b)=>b.score-a.score).slice(0,3);
+}
+
+/* ── Render recos ── */
+function renderRecos(){
+  generateRecos();
+  const list=document.getElementById('reco-list');list.innerHTML='';
+  const labels=['// recommended','// alternative','// option_3'];
+  const scoreClass=['score-high','score-mid','score-low'];
+  STATE.recos.forEach((c,i)=>{
+    const typeLabel={freelancer:'freelancer',gig:'gig_economy',wiraswasta:'wiraswasta'}[c.type]||c.type;
+    const card=document.createElement('div');
+    card.className='reco-card';card.id='rc-'+c.id;
+    card.innerHTML=`
+      <div class="reco-head">
+        <div class="reco-title">${c.title}</div>
+        <span class="reco-score ${scoreClass[i]}">${labels[i]}</span>
+      </div>
+      <div class="reco-sector">${c.sector} · ${typeLabel}</div>
+      <div class="reco-why">${c.why}</div>
+      <div class="reco-tags">
+        ${c.skillTags.slice(0,4).map(t=>`<span class="reco-tag">${t}</span>`).join('')}
+        <span class="reco-tag reco-potential">${c.potential}</span>
+      </div>`;
+    card.onclick=()=>toggleSelect(c);
+    list.appendChild(card);
+  });
+  renderSelectedPills();
+  document.getElementById('reco-sub').textContent=
+    STATE.level==='spirit'?'mode: SEMANGAT_JUANG — 3 pilihan random. Komitmen dulu, baru fight!':
+    `mode: ${STATE.level==='experience'?'PENGALAMAN':STATE.level==='tools'?'ALAT_KERJA':'SEMANGAT_JUANG'} — dicocokkan dengan profil kamu.`;
+}
+function renderSectorFilter(){
+  const wrap=document.getElementById('sector-filter');
+  wrap.innerHTML=SECTORS.map(s=>`<button class="sf-btn${s.id===STATE.activeSector?' active':''}" onclick="setSector('${s.id}')">${s.label}</button>`).join('');
+}
+function setSector(id){STATE.activeSector=id;renderSectorFilter();renderRecos();}
+
+/* ── Selected ── */
+function toggleSelect(c){
+  const idx=STATE.selected.findIndex(s=>s.id===c.id);
+  if(idx>-1){STATE.selected.splice(idx,1);document.getElementById('rc-'+c.id).classList.remove('selected');}
+  else{
+    if(STATE.selected.length>=3){showToast('> max 3 pilihan');return;}
+    STATE.selected.push(c);document.getElementById('rc-'+c.id).classList.add('selected');
+  }
+  renderSelectedPills();
+}
+function renderSelectedPills(){
+  const area=document.getElementById('selected-area');
+  const pills=document.getElementById('selected-pills');
+  if(!STATE.selected.length){area.style.display='none';return;}
+  area.style.display='block';
+  pills.innerHTML=STATE.selected.map((c,i)=>`<div class="sel-pill">${i+1}. ${c.title}<button onclick="removeSelected('${c.id}')" aria-label="Hapus">×</button></div>`).join('');
+}
+function removeSelected(id){
+  STATE.selected=STATE.selected.filter(s=>s.id!==id);
+  document.querySelectorAll('.reco-card').forEach(el=>{if(el.id==='rc-'+id)el.classList.remove('selected');});
+  renderSelectedPills();
+}
+
+/* ── Dashboard ── */
+function buildDashboard(){
+  STATE.name=document.getElementById('user-name').value||'user';
+  STATE.wa=document.getElementById('user-wa').value||'';
+  document.getElementById('dash-greeting').textContent=STATE.name+'.career_profile';
+  const chosen=STATE.selected.length>0?STATE.selected:STATE.recos.slice(0,1);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">skills</div><div class="stat-val">${STATE.skills.length}</div></div>
+    <div class="stat-card"><div class="stat-label">tools</div><div class="stat-val">${STATE.tools.length}</div></div>
+    <div class="stat-card"><div class="stat-label">peluang</div><div class="stat-val">${chosen.length}</div></div>
+    <div class="stat-card"><div class="stat-label">mode</div><div class="stat-val" style="font-size:13px;font-family:var(--mono);margin-top:4px">${STATE.level}</div></div>
+  `;
+  const initials=STATE.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const lvlMap={experience:'pengalaman_driven.pro',tools:'alat_kerja_ready.pro',spirit:'semangat_juang — jalur baru'};
+  const expPct=Math.min(100,STATE.skills.length*15);
+  const toolPct=Math.min(100,STATE.tools.length*20);
+  document.getElementById('cv-preview').innerHTML=`
+    <div class="cv-header">
+      <div style="display:flex;align-items:center;gap:14px">
+        ${STATE.photo
+          ? `<img id="cv-avatar" src="${STATE.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border-bright);flex-shrink:0;">`
+          : `<div id="cv-avatar" style="width:52px;height:52px;border-radius:50%;background:rgba(82,183,136,.2);border:2px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--mint);flex-shrink:0;font-family:var(--mono)">${initials}</div>`
+        }
+        <div>
+          <div class="cv-name">${STATE.name}</div>
+          <div class="cv-tagline">${lvlMap[STATE.level]}</div>
+          ${STATE.wa?`<div style="font-family:var(--mono);font-size:10px;color:var(--text-sec);margin-top:4px">wa: ${STATE.wa}</div>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="cv-body">
+      <div class="cv-section">
+        <h4>career_opportunities[]</h4>
+        ${chosen.map((c,i)=>`
+          <div class="cv-career">
+            <div class="cv-career-num">${String(i+1).padStart(2,'0')}</div>
+            <div class="cv-career-text">${c.title}
+              <span style="font-family:var(--mono);font-size:10px;background:rgba(82,183,136,.1);color:var(--sage);padding:1px 7px;border-radius:3px;margin-left:6px">${c.sector}</span>
+              <br><span style="font-family:var(--mono);font-size:11px;color:var(--yellow)">est. ${c.potential}</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="cv-section">
+        <h4>skills[]</h4>
+        <div class="cv-skill-grid">${STATE.skills.map(s=>`<span class="cv-skill">${s}</span>`).join('')||'<span style="font-size:12px;color:var(--text-dim)">empty</span>'}</div>
+      </div>
+      <div class="cv-section">
+        <h4>tools[]</h4>
+        <div class="cv-skill-grid">${STATE.tools.map(t=>`<span class="cv-tool">${t}</span>`).join('')||'<span style="font-size:12px;color:var(--text-dim)">empty</span>'}</div>
+      </div>
+      <div class="cv-section">
+        <h4>readiness_score{}</h4>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="cv-level-row"><span style="min-width:90px">pengalaman</span><div class="cv-level-bar"><div class="cv-level-fill" style="width:0%" data-target="${expPct}"></div></div><span style="min-width:36px;text-align:right">${expPct}%</span></div>
+          <div class="cv-level-row"><span style="min-width:90px">alat_kerja</span><div class="cv-level-bar"><div class="cv-level-fill" style="width:0%" data-target="${toolPct}"></div></div><span style="min-width:36px;text-align:right">${toolPct}%</span></div>
+          <div class="cv-level-row"><span style="min-width:90px">spirit</span><div class="cv-level-bar"><div class="cv-level-fill" style="width:0%" data-target="100"></div></div><span style="min-width:36px;text-align:right">100%</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">// generated by haget · marketing.exe</span>
+      </div>
+    </div>
+  `;
+  setTimeout(()=>document.querySelectorAll('.cv-level-fill').forEach(el=>el.style.width=el.dataset.target+'%'),200);
+  if(!STATE.notifSent){
+    STATE.notifSent=true;
+    sendNotif(STATE.name,STATE.wa,STATE.skills,STATE.tools,STATE.level,chosen);
+  }
+}
+
+
+/* ── Photo handling ── */
+STATE.photo = null;
+
+function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const size = 400;
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2;
+      const sy = (img.height - side) / 2;
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+      STATE.photo = canvas.toDataURL('image/jpeg', 0.85);
+      updatePhotoPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePhotoPreview() {
+  const wrap = document.getElementById('photo-preview-wrap');
+  if (STATE.photo) {
+    wrap.innerHTML = `
+      <img src="${STATE.photo}" class="photo-preview" alt="Foto profil">
+      <div class="photo-upload-label"><span>Foto terpilih</span> — klik untuk ganti</div>
+      <span class="photo-remove" onclick="removePhoto(event)">× hapus foto</span>
+    `;
+  } else {
+    wrap.innerHTML = `
+      <div style="font-size:32px;margin-bottom:.5rem">🌿</div>
+      <div class="photo-upload-label">Klik untuk upload foto <span>// opsional</span></div>
+      <div class="photo-upload-label" style="margin-top:3px;font-size:10px">JPG / PNG — akan di-crop otomatis 1:1</div>
+    `;
+  }
+  // update avatar in cv preview if already rendered
+  const avatarEl = document.getElementById('cv-avatar');
+  if (avatarEl) {
+    if (STATE.photo) {
+      avatarEl.outerHTML = `<img id="cv-avatar" src="${STATE.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border-bright);flex-shrink:0">`;
+    } else {
+      const initials = STATE.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      avatarEl.outerHTML = `<div id="cv-avatar" style="width:52px;height:52px;border-radius:50%;background:rgba(82,183,136,.2);border:2px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--mint);flex-shrink:0;font-family:var(--mono)">${initials}</div>`;
+    }
+  }
+}
+
+function removePhoto(e) {
+  e.stopPropagation();
+  STATE.photo = null;
+  document.getElementById('photo-file').value = '';
+  updatePhotoPreview();
+}
+
+/* ── Export HTML CV ── */
+function exportCV(){
+  const name=STATE.name||'user';
+  const chosen=STATE.selected.length>0?STATE.selected:STATE.recos.slice(0,1);
+  const modeLabel={experience:'Pengalaman',tools:'Alat Kerja',spirit:'Semangat Juang'};
+  const typeLabel={freelancer:'Freelancer',gig:'Gig Economy',wiraswasta:'Wiraswasta'};
+  const avatarHTML=STATE.photo
+    ?`<img src="${STATE.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #52B788;">`
+    :`<div style="width:80px;height:80px;border-radius:50%;background:#D8F3DC;border:3px solid #52B788;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:22px;color:#1B4332;">${name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>`;
+  const skillsHTML=STATE.skills.map(s=>`<span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 10px;border-radius:3px;background:#D8F3DC;color:#1B4332;border:1px solid #B7E4C7;display:inline-block;margin:2px 3px;">${s}</span>`).join('')||'<span style="color:#aaa;font-size:12px">—</span>';
+  const toolsHTML=STATE.tools.map(t=>`<span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 10px;border-radius:3px;background:#F5F5F0;color:#555;border:1px solid #DDD;display:inline-block;margin:2px 3px;">${t}</span>`).join('')||'<span style="color:#aaa;font-size:12px">—</span>';
+  const careersHTML=chosen.map((car,i)=>`
+    <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF0EC;">
+      <div style="width:26px;height:26px;border-radius:4px;background:#1B4332;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${String(i+1).padStart(2,'0')}</div>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#1A1A1A;margin-bottom:4px;">${car.title}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#888;margin-bottom:4px;">${car.sector} · ${typeLabel[car.type]||car.type}</div>
+        <div style="font-size:12px;color:#555;line-height:1.55;margin-bottom:5px;">${car.why}</div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#FFFBEA;color:#92400E;padding:2px 8px;border-radius:3px;border:1px solid #F5D060;">est. ${car.potential}</span>
+      </div>
+    </div>`).join('');
+  const expPct=Math.min(100,STATE.skills.length*15);
+  const toolPct=Math.min(100,STATE.tools.length*20);
+  const barStyle=(pct,color)=>`<div style="flex:1;height:5px;background:#E8EDE8;border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div></div>`;
+  const html=`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CV — ${name} · Haget</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#F2F4F0;font-family:'Inter',sans-serif;color:#1A1A1A;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;}
+  .card{background:#FAFAF8;max-width:640px;width:100%;border-radius:14px;overflow:hidden;border:1px solid #DDE8DD;box-shadow:0 4px 32px rgba(27,67,50,.08);}
+  .cv-header{background:#1B4332;padding:1.75rem 2rem;display:flex;align-items:center;gap:1.25rem;}
+  .cv-body{padding:1.75rem 2rem;}
+  .section{margin-bottom:1.5rem;}
+  .section-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:#52B788;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;padding-bottom:5px;border-bottom:1px solid #E0EAE0;}
+  .bar-row{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#888;margin-bottom:8px;}
+  .footer{text-align:center;padding:1rem 2rem;border-top:1px solid #E8EDE8;background:#F5F8F5;}
+  @media print{body{background:#fff;padding:0;}  .card{box-shadow:none;border:none;border-radius:0;}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="cv-header">
+    <div style="flex-shrink:0;">${avatarHTML}</div>
+    <div>
+      <div style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:-.01em;">${name}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#95D5B2;margin-top:5px;">${modeLabel[STATE.level]||STATE.level}_driven.professional</div>
+      ${STATE.wa?`<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#52B788;margin-top:4px;">wa: ${STATE.wa}</div>`:''}
+    </div>
+  </div>
+  <div class="cv-body">
+    <div class="section">
+      <div class="section-label">peluang_karir[]</div>
+      ${careersHTML}
+    </div>
+    <div class="section">
+      <div class="section-label">skills[]</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">${skillsHTML}</div>
+    </div>
+    <div class="section">
+      <div class="section-label">alat_kerja[]</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">${toolsHTML}</div>
+    </div>
+    <div class="section">
+      <div class="section-label">readiness_score{}</div>
+      <div class="bar-row"><span style="min-width:90px">pengalaman</span>${barStyle(expPct,'#52B788')}<span>${expPct}%</span></div>
+      <div class="bar-row"><span style="min-width:90px">alat_kerja</span>${barStyle(toolPct,'#52B788')}<span>${toolPct}%</span></div>
+      <div class="bar-row"><span style="min-width:90px">semangat</span>${barStyle(100,'#E8C547')}<span>100%</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#999;">// generated by haget · career_matchmaker from marketing.exe</span>
+  </div>
+</div>
+</body>
+</html>`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download=`haget-cv-${name.replace(/\s+/g,'-').toLowerCase()}.html`;
+  a.click();
+}
+
+/* ── Navigation ── */
+function goStep(n){
+  if(n===1){
+    const nm=document.getElementById('user-name').value.trim();
+    if(!nm){showToast('> isi nama dulu');document.getElementById('user-name').focus();return;}
+  }
+  if(n===3){renderSectorFilter();renderRecos();}
+  if(n===4)buildDashboard();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  window.scrollTo(0,0);
+}
+function resetAll(){
+  Object.assign(STATE,{name:'',wa:'',skills:[],tools:[],level:'experience',selected:[],recos:[],activeSector:'semua',notifSent:false});
+  document.getElementById('user-name').value='';
+  document.getElementById('user-wa').value='';
+  STATE.photo=null;updatePhotoPreview();
+  renderTags('skill');renderTags('tool');
+  ['exp','tools','spirit'].forEach(k=>{const el=document.getElementById('lc-'+k);if(el)el.classList.remove('selected');});
+}
+</script>
+</body>
+</html>
